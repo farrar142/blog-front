@@ -1,0 +1,27 @@
+@font-face {
+  font-family: "GmarketSansMedium";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff")
+    format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+pre > code {
+  display: inline-block;
+  width: 100%;
+  font-family: "GmarketSansMedium", sans-serif;
+  text-underline-position: under;
+}
+textarea {
+  font-family: "GmarketSansMedium", sans-serif;
+  text-underline-position: under;
+}
+html > body,
+html > body .toastui-editor-contents,
+html > body .ProseMirror,
+html > body .toastui-editor-md-code,
+html > body .toastui-editor-md-code-block,
+html > body .codemirror--body + * {
+  font-family: "GmarketSansMedium", sans-serif;
+  text-underline-position: under;
+}

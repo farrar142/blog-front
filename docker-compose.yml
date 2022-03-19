@@ -1,0 +1,16 @@
+version: '3'
+services:
+  react:
+    build : .
+    restart: unless-stopped
+    privileged: true
+    container_name: react
+    command : npm run dev
+    # command : tail -f /dev/null
+    hostname: root
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - 3000:3000
+      - 8881:8881
+###
