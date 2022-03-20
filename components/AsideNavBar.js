@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { sortById } from "../src/functions";
+import { useMousePosition } from "../src/hooks";
 
 //customFunction Start
 function htmlCollectionToArray(target, depth) {
@@ -252,6 +253,8 @@ function SubComponent(props) {
   const editorRef = props.editorRef;
   const myItem = props.prop;
   const scrollPosition = props.sposition;
+
+  const mousePosition = useMousePosition();
   const margin = props.margin ? props.margin : 300;
   if (myItem) {
     function isButton() {
@@ -284,8 +287,9 @@ function SubComponent(props) {
     }
     function highlighter() {
       if (
-        myItem.offset - 140 < scrollPosition &&
-        scrollPosition < myItem.offset + myItem.offsetHeight - 140
+        myItem.offset - 140 < scrollPosition + mousePosition.y - 140 &&
+        scrollPosition + mousePosition.y - 140 <
+          myItem.offset + myItem.offsetHeight - 140
       ) {
         try {
           isDisplay("block");

@@ -9,6 +9,7 @@ import {
   Typography,
   Tooltip,
   Breadcrumbs,
+  Slider,
 } from "@mui/material";
 import { createRef, useCallback, useEffect, useState } from "react";
 import { Cli } from "../src/api/API";
@@ -21,7 +22,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import theme from "../src/theme";
 import { CatViewer } from "../components/cli/CatViewer";
 export default (props) => {
-  const [path, setPath] = useState("/home/test");
+  const [path, setPath] = useState("/home/test/backend/src");
   const [host, setHost] = useState("49.50.174.121");
   const [user, setUser] = useState("root");
   const [pw, setPw] = useState("");
@@ -30,8 +31,10 @@ export default (props) => {
   const [files, setFiles] = useState([]);
   const [targetFile, setTargetFile] = useState("");
   const [cliResult, setContext] = useState("");
+  const [edit, setEdit] = useState("");
   const [action, setAction] = useState(false);
   const [msg, setMsg] = useSysMsg();
+  const [viewerWidth, setViewerWidth] = useState(200);
   const formRef = createRef();
   const viewerRef = createRef();
   const styles = mystyles(theme);
@@ -71,11 +74,41 @@ export default (props) => {
     )
       .then((res) => {
         setFiles(res["files"]);
+        //filtering
         console.log(res["result"]);
-        setContext(res["result"].split("\r\n").slice(2, -1).join("\r\n"));
+        const regexUser = `\\[${user}\\@.*\\]\\#`;
+        const regexPath = `\\[${user}\\@.*\\]\\# cd ${path}`;
+        const regexCmd = `\\[${user}\\@.*\\]\\# ${cmd}`;
+        const regexPureCmd = cmd;
+        const regexSpace = `(\\s\\r\\n)*[\\s\\r\\n]*`; //시작쪽의 공백제거
+        const regexLast = "(\\r\\n\\s)*";
+        const regexPurePath = `cd ${path}`;
+        const reUser = new RegExp(regexUser, "gm");
+        const rePath = new RegExp(regexPath, "gm");
+        const reCmd = new RegExp(regexCmd, "gm");
+        const rePure = new RegExp(regexPurePath, "gm");
+        const rePureCommand = new RegExp(regexPureCmd, "gm");
+        const reSpace = new RegExp(regexSpace, "m");
+        const reLast = new RegExp(regexLast, "gm");
+        const regexResult = res["result"]
+          .replace(rePath, "")
+          .replace(reCmd, "")
+          .replace(reUser, "")
+          .replace(rePure, "")
+          .replace(rePureCommand, "")
+          .replace(reSpace, "");
+        // .replace(/(\r\n\s)+$/gm, "");
+        // .replace(/\s$/gm, "");
+        const resultContext = regexResult;
+        console.log(JSON.stringify(resultContext));
+        setContext(resultContext.trim());
+        if (!cmd.includes('echo -e "')) {
+          setEdit("");
+        }
         setCmd("");
       })
       .catch((res) => {
+        setCmd("");
         alert("접속 정보를 다시 확인해주세요");
       });
   }
@@ -102,6 +135,7 @@ export default (props) => {
     const cur_path = path === "/" ? "" : path;
     const t_file = cur_path + "/" + target;
     setCmd("cat " + t_file);
+    setEdit(""); //수정중인글 초기화
     setTargetFile(t_file);
     setAction(!action);
   };
@@ -122,7 +156,12 @@ export default (props) => {
       handleSubmit(null);
     }
   }, [action]);
-
+  const modifyFile = (target, content) => {
+    const reContent = /\n/g;
+    console.log(cliResult);
+    setCmd(`echo -e "${content}" > ${target}`);
+    setAction(!action);
+  };
   const Breads = (props) => {
     const paths = props.paths;
     let sum = "";
@@ -181,11 +220,13 @@ export default (props) => {
     );
   };
   const Directories = (props) => {
+    const { children } = props;
     const files = props.files;
     const path = props.path;
     try {
       return (
-        <Container sx={styles.dirCon}>
+        <Container sx={styles.dirCon(infoPathOpen)}>
+          {children}
           {files.map((item, idx) => {
             const name = item[1] == ".." ? "상위폴더" : item[1];
             const [subMenuOpen, setSubOpen] = useState(false);
@@ -193,7 +234,10 @@ export default (props) => {
               if (item[1] != "..") {
                 return (
                   <Tooltip title="삭제">
-                    <DeleteIcon onClick={() => rmRF(path, item[1], item[0])} />
+                    <DeleteIcon
+                      sx={styles.iconCursor}
+                      onClick={() => rmRF(path, item[1], item[0])}
+                    />
                   </Tooltip>
                 );
               } else {
@@ -224,6 +268,7 @@ export default (props) => {
                       {remove()}
                       <Tooltip title="이동">
                         <DriveFileMoveIcon
+                          sx={styles.iconCursor}
                           onClick={() => changeDir(path, item[1])}
                         />
                       </Tooltip>
@@ -260,11 +305,15 @@ export default (props) => {
                     <div style={styles.subMenu(subMenuOpen)}>
                       <Tooltip title="삭제">
                         <DeleteIcon
+                          sx={styles.iconCursor}
                           onClick={() => rmRF(path, item[1], item[0])}
                         />
                       </Tooltip>
                       <Tooltip title="보기">
-                        <ZoomInIcon onClick={() => catDir(path, item[1])} />
+                        <ZoomInIcon
+                          sx={styles.iconCursor}
+                          onClick={() => catDir(path, item[1])}
+                        />
                       </Tooltip>
                       <Typography>{name}</Typography>
                     </div>
@@ -279,12 +328,25 @@ export default (props) => {
       return <Container></Container>;
     }
   };
-  const [infoOpen, setOpen] = useState(true);
-  const handleOpen = (e) => {
-    setOpen(!infoOpen);
+  const [infoSettingOpen, setSettingOpen] = useState(true);
+  const handleSettingOpen = (e) => {
+    setSettingOpen(!infoSettingOpen);
+  };
+  const [infoPathOpen, setPathOpen] = useState(true);
+  const handlePathOpen = (e) => {
+    setPathOpen(!infoPathOpen);
   };
   return (
     <Container>
+      <Container sx={styles.resultCon}>
+        <Paper
+          component="div"
+          sx={styles.respButton}
+          onClick={handleSettingOpen}
+        >
+          Setting
+        </Paper>
+      </Container>
       <Box
         ref={formRef}
         component="form"
@@ -292,10 +354,7 @@ export default (props) => {
         noValidate
         autoComplete="off"
       >
-        <Paper component="div" sx={styles.respButton} onClick={handleOpen}>
-          Setting
-        </Paper>
-        <Container sx={styles.infoCon(infoOpen)}>
+        <Container sx={styles.infoCon(infoSettingOpen)}>
           <TextField
             required
             sx={styles.inputBar}
@@ -352,12 +411,21 @@ export default (props) => {
           </Container>
         </Container>
       </Box>
-      <Breads paths={path}></Breads>
       <Container sx={styles.resultCon}>
-        <Directories files={files} path={path}></Directories>
+        <Paper component="div" sx={styles.respButton} onClick={handlePathOpen}>
+          Path
+        </Paper>
+        <Directories files={files} path={path}>
+          <Breads paths={path}></Breads>
+        </Directories>
         <CatViewer
-          sx={styles.textCon}
-          targetFile={targetFile}
+          sx={styles.viwerCon}
+          sourceFile={targetFile}
+          modifyFile={modifyFile}
+          viewerWidth={viewerWidth}
+          infoPathOpen={infoPathOpen}
+          edit={edit}
+          setEdit={setEdit}
           context={cliResult}
         ></CatViewer>
       </Container>
@@ -409,6 +477,11 @@ const mystyles = (theme) => {
         xs: "block",
         md: "none",
       },
+      width: "20%",
+      margin: "auto",
+      textAlign: "center",
+      marginTop: "10px",
+      marginBottom: "10px",
     },
     breadCon: {
       margin: "auto",
@@ -416,21 +489,24 @@ const mystyles = (theme) => {
     },
     resultCon: {
       display: "flex",
-      width: "100%",
+      width: `100%`,
       flexDirection: {
         xs: "column",
         md: "row",
       },
     },
-    textCon: {
-      width: "100%",
+    viwerCon: {
+      width: `100%`,
     },
-    dirCon: {
-      display: "block",
-      flexDirection: "row",
-      flexWrap: "wrap",
-      justifyContent: "space-around",
-      alignContent: "space-around",
+    dirCon: (check) => {
+      return {
+        display: "block",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-around",
+        alignContent: "space-around",
+        display: { xs: check ? "none" : "block", md: "block" },
+      };
     },
     fileStyle: {
       display: "inline-block",
@@ -448,6 +524,9 @@ const mystyles = (theme) => {
       overflow: "hidden",
       textOverflow: "ellipsis",
     },
+    iconCursor: {
+      cursor: "pointer",
+    },
     action: {},
     mainMenu: (check) => {
       return {
@@ -460,6 +539,11 @@ const mystyles = (theme) => {
         // cursor: "pointer",
         visibility: check ? "visible" : "hidden",
         // display: check ? "block" : "none",
+      };
+    },
+    infoPathCon: (check) => {
+      return {
+        display: { xs: check ? "none" : "flex", md: "flex" },
       };
     },
   };

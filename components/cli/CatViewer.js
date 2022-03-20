@@ -1,12 +1,20 @@
 import { useState, createRef, useEffect } from "react";
-import { Container } from "@mui/material";
+import { Container, Button, Slider, TextField } from "@mui/material";
 export const CatViewer = (props) => {
   let re = /\r\n/g;
-  const context = props.context;
-  const targetFile = props.targetFile;
-  const [edit, setEdit] = useState("");
+  const {
+    context,
+    sourceFile,
+    modifyFile,
+    viewerWidth,
+    edit,
+    setEdit,
+    infoPathOpen,
+  } = props;
+  console.log(infoPathOpen);
   const [tabLength, setTabLength] = useState(4);
   const textRef = createRef(null);
+  const [vW, setVW] = useState(100);
   useEffect(() => {
     if (textRef === null || textRef.current === null) {
       return;
@@ -34,20 +42,51 @@ export const CatViewer = (props) => {
   // context.replace(re, "<br>")
   const result = { __html: context };
   return (
-    <Container sx={{ paddingBottom: "200px" }}>
-      <div>TargetFile : {targetFile}</div>
-      <div>
-        TabLength :
-        <input
-          id="outlined-number"
-          label="Number"
-          type="number"
-          value={tabLength}
-          onChange={(e) => {
-            setTabLength(parseInt(e.target.value));
+    <Container sx={{ width: `${vW}%`, paddingBottom: "200px" }}>
+      <Container sx={styles.catCon(infoPathOpen)}>
+        <TextField
+          name="SourceFile"
+          label="SourceFile"
+          sx={styles.inputCon}
+          value={sourceFile}
+          InputProps={{
+            readOnly: true,
           }}
         />
-      </div>
+        <TextField
+          name="TargetFile"
+          label="TargetFile"
+          sx={styles.inputCon}
+          value={sourceFile}
+        />
+        <div>
+          TabLength :
+          <input
+            id="outlined-number"
+            label="Number"
+            type="number"
+            value={tabLength}
+            onChange={(e) => {
+              setTabLength(parseInt(e.target.value));
+            }}
+          />
+        </div>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <div style={{ width: "80px" }}>창크기</div>
+          <Slider
+            defaultValue={100}
+            min={20}
+            max={200}
+            aria-label="Default"
+            valueLabelDisplay="auto"
+            onMouseUp={(e) => {
+              if (e.target.querySelector("input")) {
+                setVW(e.target.querySelector("input").value);
+              }
+            }}
+          />
+        </div>
+      </Container>
       <textarea
         ref={textRef}
         name="textarea"
@@ -56,10 +95,20 @@ export const CatViewer = (props) => {
         rows="10"
         value={edit ? edit : context}
         onChange={(e) => {
-          setEdit(e.currentTarget.value);
+          if (e.currentTarget) {
+            setEdit(e.currentTarget.value);
+          }
         }}
         onKeyDown={handleSetTab}
       ></textarea>
+      <Button
+        onClick={() => {
+          modifyFile(SourceFile, edit ? edit : context);
+        }}
+        variant="contained"
+      >
+        수정
+      </Button>
       {/* <pre>
             <code dangerouslySetInnerHTML={result}></code>
           </pre> */}
@@ -68,4 +117,16 @@ export const CatViewer = (props) => {
   // } else {
   //   return <Container></Container>;
   // }
+};
+
+const styles = {
+  catCon: (check) => {
+    return {
+      display: { xs: check ? "none" : "block", md: "blcok" },
+    };
+  },
+  inputCon: {
+    width: "100%",
+    marginBottom: "10px",
+  },
 };
