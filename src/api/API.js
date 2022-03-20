@@ -98,7 +98,7 @@ class BlogApi {
         return res.data;
       })
       .catch(() => {
-        return {};
+        return [];
       });
   };
   get_article_by_id = async (id) => {
@@ -147,7 +147,15 @@ class BlogApi {
   };
 }
 class CLI {
-  cli = async (token, hostname, username, password, directory, cmd = "") => {
+  cli = async (
+    token,
+    hostname,
+    username,
+    password,
+    directory,
+    cmd = "",
+    port = 22
+  ) => {
     const data = {
       token: token.token,
       hostname,
@@ -155,6 +163,7 @@ class CLI {
       password,
       directory,
       cmd,
+      port,
     };
     // console.log(data);
     const url = "/cliserver/get";

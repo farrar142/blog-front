@@ -25,6 +25,7 @@ export default (props) => {
   const [path, setPath] = useState("/home/test/backend/src");
   const [host, setHost] = useState("49.50.174.121");
   const [user, setUser] = useState("root");
+  const [port, setPort] = useState(22);
   const [pw, setPw] = useState("");
   const [cmd, setCmd] = useState("");
   const [token, setToken] = useToken();
@@ -33,8 +34,10 @@ export default (props) => {
   const [cliResult, setContext] = useState("");
   const [edit, setEdit] = useState("");
   const [action, setAction] = useState(false);
+  const [searchKW, setKW] = useState("");
   const [msg, setMsg] = useSysMsg();
   const [viewerWidth, setViewerWidth] = useState(200);
+  const [pathHistories, setPathHistories] = useState([]);
   const formRef = createRef();
   const viewerRef = createRef();
   const styles = mystyles(theme);
@@ -47,11 +50,22 @@ export default (props) => {
   function pwHandler(e) {
     setPw(e.target.value);
   }
-  function pathHandler(e) {
+  function inputPathHandler(e) {
     setPath(e.target.value);
+  }
+  function pathHandler(target_path) {
+    setTargetFile("");
+    setPath(target_path);
   }
   function cmdHandler(e) {
     setCmd(e.target.value);
+  }
+  function portHandler(e) {
+    setPort(e.target.value);
+  }
+  function searchHandler(e) {
+    e.preventDefault();
+    setKW(e.target.value);
   }
   function handleSubmit(e) {
     try {
@@ -59,26 +73,30 @@ export default (props) => {
     } catch {}
     try {
       if (cmd.split(" ")[0] == "cd") {
-        alert("경로 이동은 ui에서만 해주세요.");
+        setMsg("경로 이동은 ui에서만 해주세요.");
         return;
       }
     } catch {}
-
+    if (!token) {
+      setMsg("로그인이 필요합니다.");
+      return;
+    }
     Cli.cli(
       token,
       host,
       user,
       pw ? pw : "eowjsrhkddurtlehdrneowjsfh304qjsrlf28",
       path,
-      cmd
+      cmd,
+      parseInt(port)
     )
       .then((res) => {
         setFiles(res["files"]);
         //filtering
-        console.log(res["result"]);
         const regexUser = `\\[${user}\\@.*\\]\\#`;
         const regexPath = `\\[${user}\\@.*\\]\\# cd ${path}`;
         const regexCmd = `\\[${user}\\@.*\\]\\# ${cmd}`;
+        const regexWrapCmd = `${cmd}(.*)`;
         const regexPureCmd = cmd;
         const regexSpace = `(\\s\\r\\n)*[\\s\\r\\n]*`; //시작쪽의 공백제거
         const regexLast = "(\\r\\n\\s)*";
@@ -89,6 +107,7 @@ export default (props) => {
         const rePure = new RegExp(regexPurePath, "gm");
         const rePureCommand = new RegExp(regexPureCmd, "gm");
         const reSpace = new RegExp(regexSpace, "m");
+        const reWrap = new RegExp(regexWrapCmd, "m");
         const reLast = new RegExp(regexLast, "gm");
         const regexResult = res["result"]
           .replace(rePath, "")
@@ -96,13 +115,17 @@ export default (props) => {
           .replace(reUser, "")
           .replace(rePure, "")
           .replace(rePureCommand, "")
-          .replace(reSpace, "");
+          .replace(reSpace, "")
+          .replace(/\r\n\>\s/gm, "\n")
+          .trim()
+          .replace(reWrap, "");
         // .replace(/(\r\n\s)+$/gm, "");
         // .replace(/\s$/gm, "");
         const resultContext = regexResult;
-        console.log(JSON.stringify(resultContext));
+        // console.log(JSON.stringify(cmd));
+        // console.log(JSON.stringify(resultContext));
         setContext(resultContext.trim());
-        if (!cmd.includes('echo -e "')) {
+        if (!cmd.includes("echo -e")) {
           setEdit("");
         }
         setCmd("");
@@ -128,7 +151,9 @@ export default (props) => {
       const prePath = path == "/" ? "" : path;
       t1 = prePath + "/" + target;
     }
-    setPath(t1);
+    setKW("");
+    setPathHistories([...pathHistories, path]);
+    pathHandler(t1);
     setAction(!action);
   };
   const catDir = (path, target) => {
@@ -142,7 +167,6 @@ export default (props) => {
   const rmRF = (path, target, type) => {
     const cmd = type == "file" ? "rm -f" : "rm -rf";
     const command = `${cmd} ${path}/${target}`;
-    console.log(path, target, type);
     if (window.confirm("정말로 삭제하시겠어요?")) {
       setCmd(command);
       setAction(!action);
@@ -151,15 +175,29 @@ export default (props) => {
       setMsg(`삭제 취소됨 명령어 : ${command}`);
     }
   };
+  const backToHistories = () => {
+    if (pathHistories.length > 0) {
+      pathHandler(pathHistories[pathHistories.length - 1]);
+      setPathHistories(pathHistories.slice(0, -1));
+      setAction(!action);
+    }
+  };
+  const moveAction = (targetPath) => {
+    setPathHistories([...pathHistories, path]);
+    pathHandler(targetPath);
+    setAction(!action);
+  };
   useEffect(() => {
     if (token) {
       handleSubmit(null);
     }
   }, [action]);
   const modifyFile = (target, content) => {
-    const reContent = /\n/g;
-    console.log(cliResult);
-    setCmd(`echo -e "${content}" > ${target}`);
+    const reContent = `echo -e "${content.replace(
+      /\r\n/gm,
+      "\n"
+    )}" > ${target}`.trim();
+    setCmd(reContent);
     setAction(!action);
   };
   const Breads = (props) => {
@@ -167,14 +205,25 @@ export default (props) => {
     let sum = "";
     const ftarget = paths.split("/");
     let target;
+    //뒤로가기버튼
+    const BackButton = () => {
+      return (
+        <div
+          key="backToHitories"
+          style={{ cursor: "pointer" }}
+          onClick={backToHistories}
+        >
+          뒤로가기
+        </div>
+      );
+    };
     if (ftarget[0] == false && ftarget[1] == false) {
       target = (
         <div
           key="/"
           style={{ cursor: "pointer" }}
           onClick={() => {
-            setPath("/");
-            setAction(!action);
+            moveAction("/");
           }}
         >
           /
@@ -190,8 +239,7 @@ export default (props) => {
               key={item}
               style={{ cursor: "pointer" }}
               onClick={() => {
-                setPath(pathProp);
-                setAction(!action);
+                moveAction(pathProp);
               }}
             >
               {item}
@@ -203,8 +251,7 @@ export default (props) => {
               key="/"
               style={{ cursor: "pointer" }}
               onClick={() => {
-                setPath("/");
-                setAction(!action);
+                moveAction("/");
               }}
             >
               /
@@ -215,13 +262,24 @@ export default (props) => {
     }
     return (
       <Breadcrumbs sx={styles.breadCon} separator="›" aria-label="breadcrumb">
-        path :: {target}
+        <BackButton /> {target}
       </Breadcrumbs>
     );
   };
   const Directories = (props) => {
     const { children } = props;
-    const files = props.files;
+    let files;
+    try {
+      files = props.files.filter((item) => {
+        if (item[1].includes(searchKW)) {
+          return item;
+        } else {
+          return;
+        }
+      });
+    } catch {
+      files = [];
+    }
     const path = props.path;
     try {
       return (
@@ -356,6 +414,7 @@ export default (props) => {
       >
         <Container sx={styles.infoCon(infoSettingOpen)}>
           <TextField
+            size="small"
             required
             sx={styles.inputBar}
             id="outlined-required1"
@@ -366,6 +425,7 @@ export default (props) => {
             placeholder="IP Address"
           />
           <TextField
+            size="small"
             required
             sx={styles.inputBar}
             id="outlined-required2"
@@ -376,6 +436,7 @@ export default (props) => {
             placeholder="Host NAME"
           />
           <TextField
+            size="small"
             required
             sx={styles.inputBar}
             id="outlined-password-input"
@@ -387,16 +448,18 @@ export default (props) => {
           />
           <Container sx={styles.submitCon}>
             <TextField
+              size="small"
               sx={styles.inputBar}
               id="outlined-read-only-input"
               label="HOST PATH"
               value={path}
-              onChange={pathHandler}
+              onChange={inputPathHandler}
               // InputProps={{
               //   readOnly: true,
               // }}
             />
             <TextField
+              size="small"
               sx={styles.inputBar}
               id="outlined-search"
               name="command"
@@ -406,8 +469,18 @@ export default (props) => {
               onChange={cmdHandler}
             />
             <Button type="submit" onClick={handleSubmit} variant="contained">
-              연결
+              Connect
             </Button>
+            <TextField
+              size="small"
+              sx={styles.inputBar}
+              id="outlined-number"
+              name="port"
+              label="Port"
+              type="number"
+              value={port}
+              onChange={portHandler}
+            />
           </Container>
         </Container>
       </Box>
@@ -415,9 +488,27 @@ export default (props) => {
         <Paper component="div" sx={styles.respButton} onClick={handlePathOpen}>
           Path
         </Paper>
-        <Directories files={files} path={path}>
-          <Breads paths={path}></Breads>
-        </Directories>
+        <Container>
+          <Container sx={styles.dirUpperCon}>
+            <Container sx={styles.searchCon}>
+              <TextField
+                size="small"
+                // sx={styles.inputBar}
+                id="outlined-search2"
+                label="Search"
+                name="search"
+                onChange={(e) => setKW(e.target.value)}
+                value={searchKW}
+                autoComplete="off"
+              />
+              <Button variant="contained" onClick={() => setKW("")}>
+                Reset
+              </Button>
+            </Container>
+            <Breads paths={path}></Breads>
+          </Container>
+          <Directories files={files} path={path}></Directories>
+        </Container>
         <CatViewer
           sx={styles.viwerCon}
           sourceFile={targetFile}
@@ -468,6 +559,15 @@ const mystyles = (theme) => {
       alignItems: "center",
       paddingLeft: "auto",
       margin: "0 auto",
+    },
+    dirUpperCon: {
+      display: "flex",
+      flexDirection: { md: "row", xs: "column" },
+      alignItems: "center",
+    },
+    searchCon: {
+      display: "flex",
+      flexDirection: "row",
     },
     inputBar: {
       width: "300px",

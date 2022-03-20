@@ -124,6 +124,26 @@ export default function PrimarySearchAppBar() {
   const menuId = "primary-search-account-menu";
 
   const mobileMenuId = "primary-search-account-menu-mobile";
+  const MoveToCliButton = () => {
+    if (accountsInfo.user_id) {
+      return (
+        <MenuItem>
+          <Link href="/cli">
+            <Typography>
+              <IconButton size="large" color="inherit">
+                <Badge badgeContent={0} color="error">
+                  <AccountCircle />
+                </Badge>
+              </IconButton>
+              SSH
+            </Typography>
+          </Link>
+        </MenuItem>
+      );
+    } else {
+      return;
+    }
+  };
   const infoEditButton = () => {
     if (accountsInfo.user_id) {
       return (
@@ -186,6 +206,7 @@ export default function PrimarySearchAppBar() {
         )}
       </MenuItem>
       {infoEditButton()}
+      {MoveToCliButton()}
     </Menu>
   );
   const [inputValues, setInput] = React.useState("");

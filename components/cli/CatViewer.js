@@ -11,7 +11,6 @@ export const CatViewer = (props) => {
     setEdit,
     infoPathOpen,
   } = props;
-  console.log(infoPathOpen);
   const [tabLength, setTabLength] = useState(4);
   const textRef = createRef(null);
   const [vW, setVW] = useState(100);
@@ -52,27 +51,26 @@ export const CatViewer = (props) => {
           InputProps={{
             readOnly: true,
           }}
+          size="small"
         />
         <TextField
           name="TargetFile"
           label="TargetFile"
           sx={styles.inputCon}
           value={sourceFile}
+          size="small"
         />
-        <div>
-          TabLength :
-          <input
-            id="outlined-number"
-            label="Number"
-            type="number"
-            value={tabLength}
-            onChange={(e) => {
-              setTabLength(parseInt(e.target.value));
-            }}
-          />
-        </div>
+        <TextField
+          label="TabLength"
+          type="number"
+          value={tabLength}
+          onChange={(e) => {
+            setTabLength(parseInt(e.target.value));
+          }}
+          size="small"
+        />
         <div style={{ display: "flex", flexDirection: "row" }}>
-          <div style={{ width: "80px" }}>창크기</div>
+          <div style={{ width: "80px" }}>Size</div>
           <Slider
             defaultValue={100}
             min={20}
@@ -103,11 +101,11 @@ export const CatViewer = (props) => {
       ></textarea>
       <Button
         onClick={() => {
-          modifyFile(SourceFile, edit ? edit : context);
+          modifyFile(sourceFile, edit ? edit : context);
         }}
         variant="contained"
       >
-        수정
+        Modify
       </Button>
       {/* <pre>
             <code dangerouslySetInnerHTML={result}></code>
@@ -122,11 +120,12 @@ export const CatViewer = (props) => {
 const styles = {
   catCon: (check) => {
     return {
-      display: { xs: check ? "none" : "block", md: "blcok" },
+      display: { xs: check ? "block" : "none", md: "blcok" },
     };
   },
   inputCon: {
     width: "100%",
+    padding: "0px",
     marginBottom: "10px",
   },
 };
