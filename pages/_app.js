@@ -96,7 +96,6 @@ const Middleware = ({ children }) => {
   useEffect(async () => {
     if (token) {
       const result = await Auth.get_info(token);
-      console.log(result);
       if (result) {
         console.log("validated");
       } else {

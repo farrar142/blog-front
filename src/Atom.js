@@ -16,6 +16,9 @@ const { persistAtom: blogAtom } = recoilPersist({
 const { persistAtom: ArticleAtom } = recoilPersist({
   key: "ArticleAtom",
 });
+const { persistAtom: CliAtom } = recoilPersist({
+  key: "CliAtom",
+});
 const { persistAtom: pageAtom } = recoilPersist({ key: "pageAtom" });
 
 export function AccountsInfoFactory(name, id, ownBlogId = 0) {
@@ -51,6 +54,11 @@ export const persistAtomEffect = (param) => {
     return persistAtom(param);
   });
 };
+export const persistCliEffect = (param) => {
+  param.getPromise(ssrCompletedState).then(() => {
+    return CliAtom(param);
+  });
+};
 // ssr option end
 export const searchTag = atom({
   key: "searchTag",
@@ -75,6 +83,16 @@ export const Token = atom({
   effects_UNSTABLE: [persistAtomEffect],
 });
 
+export const CliHost = atom({
+  key: "CliHost",
+  default: "",
+  effects_UNSTABLE: [persistAtomEffect],
+});
+export const CliPw = atom({
+  key: "CliPw",
+  default: "",
+  effects_UNSTABLE: [persistAtomEffect],
+});
 export const currentViewingBlog = atom({
   key: "currentViewingBlog",
   default: {},

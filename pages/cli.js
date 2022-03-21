@@ -9,11 +9,12 @@ import {
   Typography,
   Tooltip,
   Breadcrumbs,
+  Autocomplete,
   Slider,
 } from "@mui/material";
 import { createRef, useCallback, useEffect, useState } from "react";
 import { Cli } from "../src/api/API";
-import { useSysMsg, useToken } from "../src/hooks";
+import { useCliHost, useCliPw, useSysMsg, useToken } from "../src/hooks";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FileCopyIcon from "@mui/icons-material/FileCopy";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
@@ -21,13 +22,17 @@ import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import DeleteIcon from "@mui/icons-material/Delete";
 import theme from "../src/theme";
 import { CatViewer } from "../components/cli/CatViewer";
+function cmdFactory(command, value) {
+  return { label: command, id: value };
+}
 export default (props) => {
-  const [path, setPath] = useState("/home/test/backend/src");
-  const [host, setHost] = useState("49.50.174.121");
+  const [path, setPath] = useState("/");
+  const [host, setHost] = useCliHost();
   const [user, setUser] = useState("root");
   const [port, setPort] = useState(22);
-  const [pw, setPw] = useState("");
+  const [pw, setPw] = useCliPw();
   const [cmd, setCmd] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const [token, setToken] = useToken();
   const [files, setFiles] = useState([]);
   const [targetFile, setTargetFile] = useState("");
@@ -38,6 +43,8 @@ export default (props) => {
   const [msg, setMsg] = useSysMsg();
   const [viewerWidth, setViewerWidth] = useState(200);
   const [pathHistories, setPathHistories] = useState([]);
+  const [isLoading, setLoading] = useState(true);
+  const [cmdList, setCmdList] = useState([]);
   const formRef = createRef();
   const viewerRef = createRef();
   const styles = mystyles(theme);
@@ -67,6 +74,11 @@ export default (props) => {
     e.preventDefault();
     setKW(e.target.value);
   }
+  function cmdListHandler(command) {
+    if (command && !cmdList.find((item) => item.label == command)) {
+      setCmdList([cmdFactory(command, cmdList.length), ...cmdList]);
+    }
+  }
   function handleSubmit(e) {
     try {
       e.preventDefault();
@@ -85,7 +97,7 @@ export default (props) => {
       token,
       host,
       user,
-      pw ? pw : "eowjsrhkddurtlehdrneowjsfh304qjsrlf28",
+      pw, // ? pw : "eowjsrhkddurtlehdrneowjsfh304qjsrlf28",
       path,
       cmd,
       parseInt(port)
@@ -188,8 +200,11 @@ export default (props) => {
     setAction(!action);
   };
   useEffect(() => {
-    if (token) {
+    if (token && !isLoading) {
       handleSubmit(null);
+    }
+    if (isLoading) {
+      setLoading(false);
     }
   }, [action]);
   const modifyFile = (target, content) => {
@@ -283,7 +298,7 @@ export default (props) => {
     const path = props.path;
     try {
       return (
-        <Container sx={styles.dirCon(infoPathOpen)}>
+        <Box sx={styles.dirCon(infoPathOpen)}>
           {children}
           {files.map((item, idx) => {
             const name = item[1] == ".." ? "상위폴더" : item[1];
@@ -380,7 +395,7 @@ export default (props) => {
               );
             }
           })}
-        </Container>
+        </Box>
       );
     } catch {
       return <Container></Container>;
@@ -394,6 +409,9 @@ export default (props) => {
   const handlePathOpen = (e) => {
     setPathOpen(!infoPathOpen);
   };
+  if (isLoading) {
+    return <Container></Container>;
+  }
   return (
     <Container>
       <Container sx={styles.resultCon}>
@@ -405,14 +423,14 @@ export default (props) => {
           Setting
         </Paper>
       </Container>
-      <Box
+      <Container
         ref={formRef}
         component="form"
         sx={styles.controller}
         noValidate
         autoComplete="off"
       >
-        <Container sx={styles.infoCon(infoSettingOpen)}>
+        <Box sx={styles.infoCon(infoSettingOpen)}>
           <TextField
             size="small"
             required
@@ -443,6 +461,7 @@ export default (props) => {
             label="HOST PASSWORD"
             type="password"
             name="password"
+            value={pw}
             onChange={pwHandler}
             autoComplete="current-password"
           />
@@ -461,19 +480,6 @@ export default (props) => {
             <TextField
               size="small"
               sx={styles.inputBar}
-              id="outlined-search"
-              name="command"
-              label="Command"
-              type="text"
-              value={cmd}
-              onChange={cmdHandler}
-            />
-            <Button type="submit" onClick={handleSubmit} variant="contained">
-              Connect
-            </Button>
-            <TextField
-              size="small"
-              sx={styles.inputBar}
               id="outlined-number"
               name="port"
               label="Port"
@@ -481,36 +487,66 @@ export default (props) => {
               value={port}
               onChange={portHandler}
             />
+            <Autocomplete
+              disablePortal
+              options={cmdList}
+              renderInput={(params) => <TextField {...params} label="cmd" />}
+              size="small"
+              sx={styles.inputBar}
+              id="outlined-search"
+              name="command"
+              label="Command"
+              type="text"
+              value={inputValue}
+              isOptionEqualToValue={(option, value) => true}
+              onChange={(e, nV) => {
+                setInputValue(nV);
+              }}
+              inputValue={cmd}
+              onInputChange={(e, nV) => {
+                setCmd(nV);
+              }}
+            />
+            <Button
+              type="submit"
+              onClick={(e) => {
+                e.preventDefault();
+                console.log(cmdList);
+                cmdListHandler(cmd);
+                handleSubmit(e);
+              }}
+              variant="contained"
+            >
+              Connect
+            </Button>
           </Container>
-        </Container>
-      </Box>
-      <Container sx={styles.resultCon}>
+        </Box>
+      </Container>
+      <Box sx={styles.resultCon}>
         <Paper component="div" sx={styles.respButton} onClick={handlePathOpen}>
           Path
         </Paper>
-        <Container>
-          <Container sx={styles.dirUpperCon}>
-            <Container sx={styles.searchCon}>
-              <TextField
-                size="small"
-                // sx={styles.inputBar}
-                id="outlined-search2"
-                label="Search"
-                name="search"
-                onChange={(e) => setKW(e.target.value)}
-                value={searchKW}
-                autoComplete="off"
-              />
-              <Button variant="contained" onClick={() => setKW("")}>
-                Reset
-              </Button>
-            </Container>
-            <Breads paths={path}></Breads>
-          </Container>
+        <Box sx={{ width: "100%", paddingRight: "10px" }}>
+          <Box sx={styles.searchCon}>
+            <TextField
+              sx={styles.searchBar}
+              id="outlined-search2"
+              label="Search"
+              name="search"
+              onChange={(e) => setKW(e.target.value)}
+              value={searchKW}
+              autoComplete="off"
+              size="small"
+            />
+            <Button variant="contained" onClick={() => setKW("")}>
+              Reset
+            </Button>
+          </Box>
+          <Breads paths={path}></Breads>
           <Directories files={files} path={path}></Directories>
-        </Container>
+        </Box>
         <CatViewer
-          sx={styles.viwerCon}
+          // sx={styles.viwerCon}
           sourceFile={targetFile}
           modifyFile={modifyFile}
           viewerWidth={viewerWidth}
@@ -519,7 +555,7 @@ export default (props) => {
           setEdit={setEdit}
           context={cliResult}
         ></CatViewer>
-      </Container>
+      </Box>
     </Container>
   );
 };
@@ -534,7 +570,7 @@ const mystyles = (theme) => {
       justifyContent: "center",
       alignItems: "center",
       paddingLeft: "auto",
-      margin: "0 auto",
+      margin: "0 10px",
     },
     infoCon: (check) => {
       return {
@@ -561,13 +597,19 @@ const mystyles = (theme) => {
       margin: "0 auto",
     },
     dirUpperCon: {
+      width: "100%",
       display: "flex",
-      flexDirection: { md: "row", xs: "column" },
+      flexDirection: "column",
       alignItems: "center",
+      justifyContent: "center",
     },
     searchCon: {
       display: "flex",
       flexDirection: "row",
+    },
+    searchBar: { width: "100%" },
+    resetButton: {
+      width: "65px",
     },
     inputBar: {
       width: "300px",
@@ -590,13 +632,14 @@ const mystyles = (theme) => {
     resultCon: {
       display: "flex",
       width: `100%`,
+      padding: 0,
       flexDirection: {
         xs: "column",
         md: "row",
       },
     },
     viwerCon: {
-      width: `100%`,
+      width: "50%",
     },
     dirCon: (check) => {
       return {

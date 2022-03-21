@@ -10,6 +10,8 @@ import {
   AccountsInfoState,
   AccountsInfoFactory,
   searchTag,
+  CliHost,
+  CliPw,
 } from "./Atom";
 import { tag_stringfy } from "./functions";
 import { useRecoilState, useSetRecoilState } from "recoil";
@@ -88,6 +90,24 @@ export function useSearchTag(value = null) {
   };
   return [curTag, handler];
 }
+//cli Hooks Start
+export function useCliHost(value = null) {
+  const [cliHost, setCliHost] = useRecoilState(CliHost);
+  const handler = (hostname) => {
+    setCliHost(hostname);
+  };
+  return [cliHost, handler];
+}
+
+export function useCliPw(value = null) {
+  const [cliPw, setCliPw] = useRecoilState(CliPw);
+  const handler = (pw) => {
+    setCliPw(pw);
+  };
+  return [cliPw, handler];
+}
+//cli Hooks End
+
 export function useTimeout(callback, delay) {
   const savedCallback = useRef();
 

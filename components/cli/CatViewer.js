@@ -1,5 +1,5 @@
 import { useState, createRef, useEffect } from "react";
-import { Container, Button, Slider, TextField } from "@mui/material";
+import { Container, Button, Slider, TextField, Box } from "@mui/material";
 export const CatViewer = (props) => {
   let re = /\r\n/g;
   const {
@@ -41,25 +41,44 @@ export const CatViewer = (props) => {
   // context.replace(re, "<br>")
   const result = { __html: context };
   return (
-    <Container sx={{ width: `${vW}%`, paddingBottom: "200px" }}>
-      <Container sx={styles.catCon(infoPathOpen)}>
-        <TextField
-          name="SourceFile"
-          label="SourceFile"
-          sx={styles.inputCon}
-          value={sourceFile}
-          InputProps={{
-            readOnly: true,
-          }}
-          size="small"
-        />
-        <TextField
-          name="TargetFile"
-          label="TargetFile"
-          sx={styles.inputCon}
-          value={sourceFile}
-          size="small"
-        />
+    <Box sx={{ width: `${vW}%`, paddingBottom: "200px", paddingLeft: "10px" }}>
+      <Box sx={styles.catCon(infoPathOpen)}>
+        <Box sx={styles.inputWithButton}>
+          <TextField
+            name="SourceFile"
+            label="SourceFile"
+            sx={styles.inputCon}
+            value={sourceFile}
+            InputProps={{
+              readOnly: true,
+            }}
+            size="small"
+          />
+
+          <Button
+            sx={styles.actionButton}
+            onClick={() => {}}
+            variant="contained"
+          >
+            Paste
+          </Button>
+        </Box>
+        <Box sx={styles.inputWithButton}>
+          <TextField
+            name="TargetFile"
+            label="TargetFile"
+            sx={styles.inputCon}
+            value={sourceFile}
+            size="small"
+          />
+          <Button
+            sx={styles.actionButton}
+            onClick={() => {}}
+            variant="contained"
+          >
+            Move
+          </Button>
+        </Box>
         <TextField
           label="TabLength"
           type="number"
@@ -69,8 +88,9 @@ export const CatViewer = (props) => {
           }}
           size="small"
         />
-        <div style={{ display: "flex", flexDirection: "row" }}>
-          <div style={{ width: "80px" }}>Size</div>
+
+        <Box style={{ display: "flex", flexDirection: "row" }}>
+          <Box style={{ width: "80px" }}>Size</Box>
           <Slider
             defaultValue={100}
             min={20}
@@ -83,9 +103,10 @@ export const CatViewer = (props) => {
               }
             }}
           />
-        </div>
-      </Container>
+        </Box>
+      </Box>
       <textarea
+        style={{ padding: 0, margin: 0 }}
         ref={textRef}
         name="textarea"
         id=""
@@ -100,6 +121,7 @@ export const CatViewer = (props) => {
         onKeyDown={handleSetTab}
       ></textarea>
       <Button
+        sx={styles.modifyButton}
         onClick={() => {
           modifyFile(sourceFile, edit ? edit : context);
         }}
@@ -110,7 +132,7 @@ export const CatViewer = (props) => {
       {/* <pre>
             <code dangerouslySetInnerHTML={result}></code>
           </pre> */}
-    </Container>
+    </Box>
   );
   // } else {
   //   return <Container></Container>;
@@ -120,12 +142,23 @@ export const CatViewer = (props) => {
 const styles = {
   catCon: (check) => {
     return {
-      display: { xs: check ? "block" : "none", md: "blcok" },
+      display: { xs: check ? "none" : "flex", md: "flex" },
+      flexDirection: "column",
+      justifyContent: "center",
     };
   },
+  inputWithButton: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: "10px",
+  },
+  actionButton: { width: "65px" },
   inputCon: {
     width: "100%",
-    padding: "0px",
-    marginBottom: "10px",
+  },
+  modifyButton: {
+    padding: "6px 0",
   },
 };
