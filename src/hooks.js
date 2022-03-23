@@ -12,6 +12,7 @@ import {
   searchTag,
   CliHost,
   CliPw,
+  cursorLoadingAtom,
 } from "./Atom";
 import { tag_stringfy } from "./functions";
 import { useRecoilState, useSetRecoilState } from "recoil";
@@ -89,6 +90,23 @@ export function useSearchTag(value = null) {
     setSearchTag(tag);
   };
   return [curTag, handler];
+}
+export function useCursorLoading(value = null) {
+  const [cursorLoading, setCursorLoading] = useRecoilState(cursorLoadingAtom);
+
+  const handler = (tag) => {
+    setCursorLoading(tag);
+  };
+  const mouseMove = (cursorLoading) => {
+    // console.log(cursorLoading);
+  };
+  useEffect(() => {
+    window.addEventListener("mousemove", mouseMove(cursorLoading));
+    return () => {
+      window.removeEventListener("mousemove", mouseMove(cursorLoading));
+    };
+  });
+  return [cursorLoading, handler];
 }
 //cli Hooks Start
 export function useCliHost(value = null) {
@@ -179,4 +197,11 @@ export function useResize(value = null) {
     };
   }, []);
   return changed;
+}
+export function useDebounce(callback, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => callback(...args), delay);
+  };
 }

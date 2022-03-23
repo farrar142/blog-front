@@ -27,6 +27,7 @@ import Router, { useRouter } from "next/router";
 import {
   useAccountsInfo,
   useBlogChecker,
+  useCursorLoading,
   useSysMsg,
   useToken,
 } from "../src/hooks";
@@ -36,6 +37,7 @@ const clientSideEmotionCache = createEmotionCache();
 
 export default function MyApp(props) {
   const { Component, emotionCache = clientSideEmotionCache, pageProps } = props;
+
   return (
     <CacheProvider value={emotionCache}>
       <Head>
@@ -81,6 +83,7 @@ const Contents = ({ children }) => {
   } else {
     return <div>로딩중</div>;
   }
+  const [cursorLoading, setCursorLoading] = useCursorLoading();
   return (
     <Container maxWidth={false} component="div" sx={styles}>
       {children}

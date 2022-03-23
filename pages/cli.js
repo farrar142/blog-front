@@ -14,14 +14,17 @@ import {
 } from "@mui/material";
 import { createRef, useCallback, useEffect, useState } from "react";
 import { Cli } from "../src/api/API";
-import { useCliHost, useCliPw, useSysMsg, useToken } from "../src/hooks";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
-import FileCopyIcon from "@mui/icons-material/FileCopy";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
-import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import DeleteIcon from "@mui/icons-material/Delete";
+import {
+  useCliHost,
+  useCliPw,
+  useCursorLoading,
+  useDebounce,
+  useSysMsg,
+  useToken,
+} from "../src/hooks";
 import theme from "../src/theme";
 import { CatViewer } from "../components/cli/CatViewer";
+import { Directories } from "../components/cli/Directories";
 function cmdFactory(command, value) {
   return { label: command, id: value };
 }
@@ -35,7 +38,7 @@ export default (props) => {
   const [inputValue, setInputValue] = useState("");
   const [token, setToken] = useToken();
   const [files, setFiles] = useState([]);
-  const [targetFile, setTargetFile] = useState("");
+  const [sourceFile, setSourceFile] = useState("");
   const [cliResult, setContext] = useState("");
   const [edit, setEdit] = useState("");
   const [action, setAction] = useState(false);
@@ -45,6 +48,7 @@ export default (props) => {
   const [pathHistories, setPathHistories] = useState([]);
   const [isLoading, setLoading] = useState(true);
   const [cmdList, setCmdList] = useState([]);
+  const [cursorLoading, setCursorLoading] = useCursorLoading();
   const formRef = createRef();
   const viewerRef = createRef();
   const styles = mystyles(theme);
@@ -61,7 +65,7 @@ export default (props) => {
     setPath(e.target.value);
   }
   function pathHandler(target_path) {
-    setTargetFile("");
+    setSourceFile("");
     setPath(target_path);
   }
   function cmdHandler(e) {
@@ -93,6 +97,13 @@ export default (props) => {
       setMsg("로그인이 필요합니다.");
       return;
     }
+    if (!host || !user) {
+      setMsg("접속 정보를 입력해주세요");
+      return;
+    }
+
+    setCursorLoading(true);
+
     Cli.cli(
       token,
       host,
@@ -145,8 +156,16 @@ export default (props) => {
       .catch((res) => {
         setCmd("");
         alert("접속 정보를 다시 확인해주세요");
+      })
+      .finally(() => {
+        setCursorLoading(false);
       });
   }
+  const pathResolver = (path, target) => {
+    const t1 = path == "/" ? "" : path;
+    const t2 = target;
+    return t1 + "/" + t2;
+  };
   const changeDir = (path, target) => {
     /// /home/test
     let t1 = "/";
@@ -160,8 +179,7 @@ export default (props) => {
         t1 = "/";
       }
     } else {
-      const prePath = path == "/" ? "" : path;
-      t1 = prePath + "/" + target;
+      t1 = pathResolver(path, target);
     }
     setKW("");
     setPathHistories([...pathHistories, path]);
@@ -169,16 +187,15 @@ export default (props) => {
     setAction(!action);
   };
   const catDir = (path, target) => {
-    const cur_path = path === "/" ? "" : path;
-    const t_file = cur_path + "/" + target;
+    const t_file = pathResolver(path, target);
     setCmd("cat " + t_file);
     setEdit(""); //수정중인글 초기화
-    setTargetFile(t_file);
+    setSourceFile(t_file);
     setAction(!action);
   };
   const rmRF = (path, target, type) => {
-    const cmd = type == "file" ? "rm -f" : "rm -rf";
-    const command = `${cmd} ${path}/${target}`;
+    const tcmd = type == "file" ? "rm -f" : "rm -rf";
+    const command = `${tcmd} ${pathResolver(path, target)}`;
     if (window.confirm("정말로 삭제하시겠어요?")) {
       setCmd(command);
       setAction(!action);
@@ -186,6 +203,18 @@ export default (props) => {
     } else {
       setMsg(`삭제 취소됨 명령어 : ${command}`);
     }
+  };
+  const cP = (target, source) => {
+    const tcmd = `cp -rp ${target} ${source}`;
+    setCmd(tcmd);
+    setAction(!action);
+    setMsg(`복사됨 명령어 : ${tcmd}`);
+  };
+  const mV = (target, source) => {
+    const tcmd = `mv ${target} ${source}`;
+    setCmd(tcmd);
+    setAction(!action);
+    setMsg(`변경됨 명령어 : ${tcmd}`);
   };
   const backToHistories = () => {
     if (pathHistories.length > 0) {
@@ -199,14 +228,11 @@ export default (props) => {
     pathHandler(targetPath);
     setAction(!action);
   };
-  useEffect(() => {
-    if (token && !isLoading) {
-      handleSubmit(null);
-    }
-    if (isLoading) {
-      setLoading(false);
-    }
-  }, [action]);
+  const pasteName = (pathName, fileName) => {
+    const t1 = pathResolver(pathName, fileName);
+    navigator.clipboard.writeText(t1);
+    setMsg(`복사되었습니다 ${t1}`);
+  };
   const modifyFile = (target, content) => {
     const reContent = `echo -e "${content.replace(
       /\r\n/gm,
@@ -223,26 +249,30 @@ export default (props) => {
     //뒤로가기버튼
     const BackButton = () => {
       return (
-        <div
-          key="backToHitories"
-          style={{ cursor: "pointer" }}
-          onClick={backToHistories}
-        >
-          뒤로가기
-        </div>
+        <Tooltip title="이전 폴더로 돌아갑니다.">
+          <div
+            key="backToHitories"
+            style={{ cursor: "pointer" }}
+            onClick={backToHistories}
+          >
+            뒤로가기
+          </div>
+        </Tooltip>
       );
     };
     if (ftarget[0] == false && ftarget[1] == false) {
       target = (
-        <div
-          key="/"
-          style={{ cursor: "pointer" }}
-          onClick={() => {
-            moveAction("/");
-          }}
-        >
-          /
-        </div>
+        <Tooltip title="최상위 폴더로 이동합니다.">
+          <div
+            key="/"
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              moveAction("/");
+            }}
+          >
+            /
+          </div>
+        </Tooltip>
       );
     } else {
       target = ftarget.map((item) => {
@@ -281,126 +311,6 @@ export default (props) => {
       </Breadcrumbs>
     );
   };
-  const Directories = (props) => {
-    const { children } = props;
-    let files;
-    try {
-      files = props.files.filter((item) => {
-        if (item[1].includes(searchKW)) {
-          return item;
-        } else {
-          return;
-        }
-      });
-    } catch {
-      files = [];
-    }
-    const path = props.path;
-    try {
-      return (
-        <Box sx={styles.dirCon(infoPathOpen)}>
-          {children}
-          {files.map((item, idx) => {
-            const name = item[1] == ".." ? "상위폴더" : item[1];
-            const [subMenuOpen, setSubOpen] = useState(false);
-            const remove = () => {
-              if (item[1] != "..") {
-                return (
-                  <Tooltip title="삭제">
-                    <DeleteIcon
-                      sx={styles.iconCursor}
-                      onClick={() => rmRF(path, item[1], item[0])}
-                    />
-                  </Tooltip>
-                );
-              } else {
-                return;
-              }
-            };
-            if (item[1] == ".") {
-              return;
-            } else if (item[0] == "dir") {
-              return (
-                <Card
-                  key={idx + item[0] + item[1]}
-                  sx={styles.fileStyle}
-                  // onClick={() => changeDir(path, item[1])}
-                  onMouseOver={() => {
-                    setSubOpen(true);
-                  }}
-                  onMouseLeave={() => {
-                    setSubOpen(false);
-                  }}
-                >
-                  <div style={styles.mainMenu(subMenuOpen)}>
-                    <FolderOpenIcon />
-                    <Typography sx={styles.textStyle}>{name}</Typography>
-                  </div>
-                  <Tooltip title={name}>
-                    <div style={styles.subMenu(subMenuOpen)}>
-                      {remove()}
-                      <Tooltip title="이동">
-                        <DriveFileMoveIcon
-                          sx={styles.iconCursor}
-                          onClick={() => changeDir(path, item[1])}
-                        />
-                      </Tooltip>
-                      <Typography>{name}</Typography>
-                    </div>
-                  </Tooltip>
-                </Card>
-              );
-            }
-          })}
-
-          {files.map((item, idx) => {
-            const name = item[1];
-            const [subMenuOpen, setSubOpen] = useState(false);
-            if (item[0] == "file") {
-              const name = item[1];
-              return (
-                <Card
-                  key={idx + item[0] + item[1]}
-                  sx={styles.fileStyle}
-                  // onClick={() => changeDir(path, item[1])}
-                  onMouseOver={(e) => {
-                    setSubOpen(true);
-                  }}
-                  onMouseLeave={(e) => {
-                    setSubOpen(false);
-                  }}
-                >
-                  <div style={styles.mainMenu(subMenuOpen)}>
-                    <FileCopyIcon />
-                    <Typography sx={styles.textStyle}>{name}</Typography>
-                  </div>
-                  <Tooltip title={name}>
-                    <div style={styles.subMenu(subMenuOpen)}>
-                      <Tooltip title="삭제">
-                        <DeleteIcon
-                          sx={styles.iconCursor}
-                          onClick={() => rmRF(path, item[1], item[0])}
-                        />
-                      </Tooltip>
-                      <Tooltip title="보기">
-                        <ZoomInIcon
-                          sx={styles.iconCursor}
-                          onClick={() => catDir(path, item[1])}
-                        />
-                      </Tooltip>
-                      <Typography>{name}</Typography>
-                    </div>
-                  </Tooltip>
-                </Card>
-              );
-            }
-          })}
-        </Box>
-      );
-    } catch {
-      return <Container></Container>;
-    }
-  };
   const [infoSettingOpen, setSettingOpen] = useState(true);
   const handleSettingOpen = (e) => {
     setSettingOpen(!infoSettingOpen);
@@ -409,6 +319,21 @@ export default (props) => {
   const handlePathOpen = (e) => {
     setPathOpen(!infoPathOpen);
   };
+  const searchKWHandler = useCallback(
+    useDebounce((e) => {
+      setChidrenSearchKw(e);
+    }, 300),
+    []
+  );
+  const [childrenSearchKw, setChidrenSearchKw] = useState("");
+  useEffect(() => {
+    if (token && !isLoading) {
+      handleSubmit(null);
+    }
+    if (isLoading) {
+      setLoading(false);
+    }
+  }, [action]);
   if (isLoading) {
     return <Container></Container>;
   }
@@ -507,18 +432,19 @@ export default (props) => {
                 setCmd(nV);
               }}
             />
-            <Button
-              type="submit"
-              onClick={(e) => {
-                e.preventDefault();
-                console.log(cmdList);
-                cmdListHandler(cmd);
-                handleSubmit(e);
-              }}
-              variant="contained"
-            >
-              Connect
-            </Button>
+            <Tooltip title="서버에 연결합니다.">
+              <Button
+                type="submit"
+                onClick={(e) => {
+                  e.preventDefault();
+                  cmdListHandler(cmd);
+                  handleSubmit(e);
+                }}
+                variant="contained"
+              >
+                Connect
+              </Button>
+            </Tooltip>
           </Container>
         </Box>
       </Container>
@@ -528,32 +454,56 @@ export default (props) => {
         </Paper>
         <Box sx={{ width: "100%", paddingRight: "10px" }}>
           <Box sx={styles.searchCon}>
-            <TextField
-              sx={styles.searchBar}
-              id="outlined-search2"
-              label="Search"
-              name="search"
-              onChange={(e) => setKW(e.target.value)}
-              value={searchKW}
-              autoComplete="off"
-              size="small"
-            />
-            <Button variant="contained" onClick={() => setKW("")}>
-              Reset
-            </Button>
+            <Tooltip title="현재 디렉토리의 파일에서 검색합니다.">
+              <TextField
+                sx={styles.searchBar}
+                id="outlined-search2"
+                label="Search"
+                name="search"
+                onChange={(e) => {
+                  setKW(e.target.value);
+                  searchKWHandler(e.target.value);
+                }}
+                value={searchKW}
+                autoComplete="off"
+                size="small"
+              />
+            </Tooltip>
+            <Tooltip title="검색어를 초기화합니다.">
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setKW("");
+                  setChidrenSearchKw("");
+                }}
+              >
+                Reset
+              </Button>
+            </Tooltip>
           </Box>
           <Breads paths={path}></Breads>
-          <Directories files={files} path={path}></Directories>
+          <Directories
+            files={files}
+            path={path}
+            rmRF={rmRF}
+            pasteName={pasteName}
+            changeDir={changeDir}
+            searchKW={childrenSearchKw}
+            infoPathOpen={infoPathOpen}
+            catDir={catDir}
+          ></Directories>
         </Box>
         <CatViewer
           // sx={styles.viwerCon}
-          sourceFile={targetFile}
+          sourceFile={sourceFile}
+          setSourceFile={setSourceFile}
           modifyFile={modifyFile}
           viewerWidth={viewerWidth}
-          infoPathOpen={infoPathOpen}
           edit={edit}
           setEdit={setEdit}
           context={cliResult}
+          cP={cP}
+          mV={mV}
         ></CatViewer>
       </Box>
     </Container>

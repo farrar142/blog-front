@@ -57,6 +57,16 @@ class Auth {
   }
 }
 class BlogApi {
+  post_blogName = async (token, blog_id, blog_name) => {
+    const url = `/api/blog/edit`;
+    return await post(url, { token: token.token, blog_id, blog_name })
+      .then((res) => {
+        return res.data;
+      })
+      .catch(() => {
+        return [];
+      });
+  };
   get_tags = async (id) => {
     const url = `/api/blogs/${id}/tags`;
     return await get(url)

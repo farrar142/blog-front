@@ -21,11 +21,12 @@ const { persistAtom: CliAtom } = recoilPersist({
 });
 const { persistAtom: pageAtom } = recoilPersist({ key: "pageAtom" });
 
-export function AccountsInfoFactory(name, id, ownBlogId = 0) {
+export function AccountsInfoFactory(name, id, blog__id = 0, blog__name = "") {
   return {
     username: name,
     user_id: id,
-    ownBlogId: ownBlogId,
+    blog__id: blog__id,
+    blog__name: blog__name,
   };
 }
 
@@ -60,6 +61,10 @@ export const persistCliEffect = (param) => {
   });
 };
 // ssr option end
+export const cursorLoadingAtom = atom({
+  key: "cursorLoading",
+  default: false,
+});
 export const searchTag = atom({
   key: "searchTag",
   default: "",

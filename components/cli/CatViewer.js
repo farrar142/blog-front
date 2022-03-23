@@ -1,5 +1,12 @@
 import { useState, createRef, useEffect } from "react";
-import { Container, Button, Slider, TextField, Box } from "@mui/material";
+import {
+  Container,
+  Button,
+  Slider,
+  TextField,
+  Box,
+  Tooltip,
+} from "@mui/material";
 export const CatViewer = (props) => {
   let re = /\r\n/g;
   const {
@@ -7,11 +14,15 @@ export const CatViewer = (props) => {
     sourceFile,
     modifyFile,
     viewerWidth,
+    setSourceFile,
     edit,
     setEdit,
     infoPathOpen,
+    cP,
+    mV,
   } = props;
   const [tabLength, setTabLength] = useState(4);
+  const [targetFile, setTargetFile] = useState("");
   const textRef = createRef(null);
   const [vW, setVW] = useState(100);
   useEffect(() => {
@@ -44,66 +55,81 @@ export const CatViewer = (props) => {
     <Box sx={{ width: `${vW}%`, paddingBottom: "200px", paddingLeft: "10px" }}>
       <Box sx={styles.catCon(infoPathOpen)}>
         <Box sx={styles.inputWithButton}>
-          <TextField
-            name="SourceFile"
-            label="SourceFile"
-            sx={styles.inputCon}
-            value={sourceFile}
-            InputProps={{
-              readOnly: true,
-            }}
-            size="small"
-          />
-
-          <Button
-            sx={styles.actionButton}
-            onClick={() => {}}
-            variant="contained"
-          >
-            Paste
-          </Button>
+          <Tooltip title="원본 파일 입니다.">
+            <TextField
+              name="SourceFile"
+              label="SourceFile"
+              sx={styles.inputCon}
+              value={sourceFile}
+              onChange={(e) => setSourceFile(e.target.value)}
+              size="small"
+            />
+          </Tooltip>
+          <Tooltip title="원본 파일에서 대상 파일로 복사합니다">
+            <Button
+              sx={styles.actionButton}
+              onClick={() => {
+                cP(sourceFile, targetFile);
+              }}
+              variant="contained"
+            >
+              Paste
+            </Button>
+          </Tooltip>
         </Box>
         <Box sx={styles.inputWithButton}>
+          <Tooltip title="대상 파일입니다.">
+            <TextField
+              name="TargetFile"
+              label="TargetFile"
+              sx={styles.inputCon}
+              value={targetFile}
+              onChange={(e) => {
+                setTargetFile(e.target.value);
+              }}
+              size="small"
+            />
+          </Tooltip>
+          <Tooltip title="원본 파일에서 대상 파일로 파일을 옮깁니다.">
+            <Button
+              sx={styles.actionButton}
+              onClick={() => {
+                mV(sourceFile, targetFile);
+              }}
+              variant="contained"
+            >
+              Move
+            </Button>
+          </Tooltip>
+        </Box>
+        <Tooltip title="탭을 눌렀을때 탭의 길이를 조절합니다.">
           <TextField
-            name="TargetFile"
-            label="TargetFile"
-            sx={styles.inputCon}
-            value={sourceFile}
+            label="TabLength"
+            type="number"
+            value={tabLength}
+            onChange={(e) => {
+              setTabLength(parseInt(e.target.value));
+            }}
             size="small"
           />
-          <Button
-            sx={styles.actionButton}
-            onClick={() => {}}
-            variant="contained"
-          >
-            Move
-          </Button>
-        </Box>
-        <TextField
-          label="TabLength"
-          type="number"
-          value={tabLength}
-          onChange={(e) => {
-            setTabLength(parseInt(e.target.value));
-          }}
-          size="small"
-        />
-
-        <Box style={{ display: "flex", flexDirection: "row" }}>
-          <Box style={{ width: "80px" }}>Size</Box>
-          <Slider
-            defaultValue={100}
-            min={20}
-            max={200}
-            aria-label="Default"
-            valueLabelDisplay="auto"
-            onMouseUp={(e) => {
-              if (e.target.querySelector("input")) {
-                setVW(e.target.querySelector("input").value);
-              }
-            }}
-          />
-        </Box>
+        </Tooltip>
+        <Tooltip title="에디터 창의 크기를 조절합니다.">
+          <Box style={{ display: "flex", flexDirection: "row" }}>
+            <Box style={{ width: "80px" }}>Size</Box>
+            <Slider
+              defaultValue={100}
+              min={20}
+              max={200}
+              aria-label="Default"
+              valueLabelDisplay="auto"
+              onMouseUp={(e) => {
+                if (e.target.querySelector("input")) {
+                  setVW(e.target.querySelector("input").value);
+                }
+              }}
+            />
+          </Box>
+        </Tooltip>
       </Box>
       <textarea
         style={{ padding: 0, margin: 0 }}
@@ -120,15 +146,17 @@ export const CatViewer = (props) => {
         }}
         onKeyDown={handleSetTab}
       ></textarea>
-      <Button
-        sx={styles.modifyButton}
-        onClick={() => {
-          modifyFile(sourceFile, edit ? edit : context);
-        }}
-        variant="contained"
-      >
-        Modify
-      </Button>
+      <Tooltip title="소스파일을 수정합니다.">
+        <Button
+          sx={styles.modifyButton}
+          onClick={() => {
+            modifyFile(sourceFile, edit ? edit : context);
+          }}
+          variant="contained"
+        >
+          Modify
+        </Button>
+      </Tooltip>
       {/* <pre>
             <code dangerouslySetInnerHTML={result}></code>
           </pre> */}

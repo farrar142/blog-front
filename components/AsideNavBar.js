@@ -69,7 +69,8 @@ export default (props) => {
   const router = props.router;
   let targetPath;
   try {
-    targetPath = decodeURI(router.asPath.split("#")[1]);
+    let sharptag = router.asPath.split("#")[1];
+    targetPath = sharptag ? decodeURI(sharptag) : false;
   } catch {}
   useInterval(() => {
     if (isNavLoaded) {
@@ -173,7 +174,11 @@ export default (props) => {
               .options.el.querySelector("div")
               .getElementsByClassName(targetPath); // 맨처음로딩을 false시키기위해...어쩔수없이 남겨둠
             // setTimeout(() => scrollToItem(target_collection[0]), 1000);
-            window.location.href = "#" + targetPath; // scroll to item
+            if (targetPath) {
+              //왜 언디파인드가 문자열인지는 모르겠음..
+              console.log(targetPath);
+              window.location.href = "#" + targetPath; // scroll to item
+            }
             setLocated(false);
           }
         } catch {}
