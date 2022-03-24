@@ -9,8 +9,11 @@ services:
     # command : tail -f /dev/null
     hostname: root
     volumes:
-      - .:/usr/src/app
+      - ./components:/usr/src/app/components
+      - ./pages:/usr/src/app/pages
+      - ./src:/usr/src/app/src
+      - ./package.json:/usr/src/app/package.json
+      - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - 3000:3000
-      - 8881:8881
+      - 3000:80
 ###
