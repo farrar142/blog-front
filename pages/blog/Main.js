@@ -20,7 +20,7 @@ export default function Main() {
   return (
     <Container sx={styles.mainCon}>
       <Main_tag_renderer tags={mainShowingTags} setSearchTag={setSearchTag} />
-      <Typography>{introduce(searchTag, "추천 게시물")}</Typography>
+      <Typography>{introduce(searchTag, "추천 게시물 ")}</Typography>
       <Articles_renderer
         articles={mainArticles}
         setSearchTag={setSearchTag}

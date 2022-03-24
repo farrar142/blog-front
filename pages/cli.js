@@ -452,35 +452,7 @@ export default (props) => {
         <Paper component="div" sx={styles.respButton} onClick={handlePathOpen}>
           Path
         </Paper>
-        <Box sx={{ width: "100%", paddingRight: "10px" }}>
-          <Box sx={styles.searchCon}>
-            <Tooltip title="현재 디렉토리의 파일에서 검색합니다.">
-              <TextField
-                sx={styles.searchBar}
-                id="outlined-search2"
-                label="Search"
-                name="search"
-                onChange={(e) => {
-                  setKW(e.target.value);
-                  searchKWHandler(e.target.value);
-                }}
-                value={searchKW}
-                autoComplete="off"
-                size="small"
-              />
-            </Tooltip>
-            <Tooltip title="검색어를 초기화합니다.">
-              <Button
-                variant="contained"
-                onClick={() => {
-                  setKW("");
-                  setChidrenSearchKw("");
-                }}
-              >
-                Reset
-              </Button>
-            </Tooltip>
-          </Box>
+        <Box sx={{ width: "100%", paddingRight: "10px", paddingLeft: "10px" }}>
           <Breads paths={path}></Breads>
           <Directories
             files={files}
@@ -491,7 +463,37 @@ export default (props) => {
             searchKW={childrenSearchKw}
             infoPathOpen={infoPathOpen}
             catDir={catDir}
-          ></Directories>
+          >
+            <Box sx={styles.searchCon}>
+              <Tooltip title="현재 디렉토리의 파일에서 검색합니다.">
+                <TextField
+                  sx={styles.searchBar}
+                  id="outlined-search2"
+                  label="Search"
+                  name="search"
+                  onChange={(e) => {
+                    setKW(e.target.value);
+                    searchKWHandler(e.target.value);
+                  }}
+                  value={searchKW}
+                  autoComplete="off"
+                  size="small"
+                />
+              </Tooltip>
+              <Tooltip title="검색어를 초기화합니다.">
+                <Button
+                  sx={{ width: "65px" }}
+                  variant="contained"
+                  onClick={() => {
+                    setKW("");
+                    setChidrenSearchKw("");
+                  }}
+                >
+                  Reset
+                </Button>
+              </Tooltip>
+            </Box>
+          </Directories>
         </Box>
         <CatViewer
           // sx={styles.viwerCon}
@@ -521,6 +523,7 @@ const mystyles = (theme) => {
       alignItems: "center",
       paddingLeft: "auto",
       margin: "0 10px",
+      marginBottom: "10px",
     },
     infoCon: (check) => {
       return {

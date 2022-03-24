@@ -52,7 +52,14 @@ export const CatViewer = (props) => {
   // context.replace(re, "<br>")
   const result = { __html: context };
   return (
-    <Box sx={{ width: `${vW}%`, paddingBottom: "200px", paddingLeft: "10px" }}>
+    <Box
+      sx={{
+        width: `${vW}%`,
+        paddingBottom: "200px",
+        paddingLeft: "10px",
+        paddingRight: "10px",
+      }}
+    >
       <Box sx={styles.catCon(infoPathOpen)}>
         <Box sx={styles.inputWithButton}>
           <Tooltip title="원본 파일 입니다.">

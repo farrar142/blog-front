@@ -32,13 +32,10 @@ export const Directories = React.memo((props) => {
     searchKW,
   } = props;
   const [curFiles, setCurFiles] = useState(props.files);
-  console.log(children, searchKW);
-  console.log("iam rendered");
   useEffect(() => {
     try {
       setCurFiles(
         props.files.filter((item) => {
-          console.log(searchKW);
           if (item[1].includes(searchKW)) {
             return item;
           } else {
@@ -151,7 +148,7 @@ const DisplayDirIcon = React.memo((props) => {
       </Tooltip>
     </Card>
   );
-});
+}, dirsPropsAreEqual);
 const DisplayFileIcon = React.memo((props) => {
   const { path, item, idx, rmRF, pasteName, catDir, changeDir } = props;
   const [subMenuOpen, setSubOpen] = useState(false);
@@ -198,6 +195,12 @@ const DisplayFileIcon = React.memo((props) => {
     </Card>
   );
 });
+
+function dirsPropsAreEqual(prevDir, nextDir) {
+  return (
+    prevDir.searchKW === nextDir.searchKW && prevDir.files === nextDir.files
+  );
+}
 const styles = () => {
   return {
     controller: {
@@ -294,7 +297,7 @@ const styles = () => {
       display: "inline-block",
       textAlign: "center",
       height: "70px",
-      width: "15%",
+      width: "18%",
       padding: "5px",
       margin: "3px",
       "&:hover": {
