@@ -144,6 +144,22 @@ export default function PrimarySearchAppBar() {
       return;
     }
   };
+  const MoveToComposerator = () => {
+    return (
+      <MenuItem>
+        <Link href="/composerator">
+          <Typography>
+            <IconButton size="large" color="inherit">
+              <Badge badgeContent={0} color="error">
+                <AccountCircle />
+              </Badge>
+            </IconButton>
+            Composerator
+          </Typography>
+        </Link>
+      </MenuItem>
+    );
+  };
   const infoEditButton = () => {
     if (accountsInfo.user_id) {
       return (
@@ -207,6 +223,7 @@ export default function PrimarySearchAppBar() {
       </MenuItem>
       {infoEditButton()}
       {MoveToCliButton()}
+      <MoveToComposerator />
     </Menu>
   );
   const [inputValues, setInput] = React.useState("");

@@ -22,6 +22,7 @@ import { Container } from "@mui/material";
 import Navbar from "../components/Navbar";
 import FixedBottomNavigation from "../components/Footer";
 import SysMsg from "../components/SysMsg";
+import Progressbar from "../components/apps/Progressbar";
 import { AccountsInfoFactory, useSsrComplectedState } from "../src/Atom";
 import Router, { useRouter } from "next/router";
 import {
@@ -37,7 +38,8 @@ const clientSideEmotionCache = createEmotionCache();
 
 export default function MyApp(props) {
   const { Component, emotionCache = clientSideEmotionCache, pageProps } = props;
-
+  axios.defaults.xsrfCookieName = "csrftoken";
+  axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
   return (
     <CacheProvider value={emotionCache}>
       <Head>
@@ -79,13 +81,24 @@ MyApp.propTypes = {
 
 const Contents = ({ children }) => {
   const router = useRouter();
+  const [cursorLoading, setCursorLoading] = useCursorLoading();
+  const progBar = () => {
+    if (cursorLoading) {
+      return <Progressbar />;
+    } else {
+    }
+  };
   if (router.isReady) {
   } else {
-    return <div>로딩중</div>;
+    return (
+      <Container maxWidth={false} component="div" sx={styles}>
+        <Progressbar />
+      </Container>
+    );
   }
-  const [cursorLoading, setCursorLoading] = useCursorLoading();
   return (
     <Container maxWidth={false} component="div" sx={styles}>
+      {progBar()}
       {children}
     </Container>
   );
@@ -112,6 +125,10 @@ const Middleware = ({ children }) => {
 };
 const styles = {
   margin: 0,
+  paddingLeft: { md: "0px", xs: "0px" },
+  paddingRight: { md: "0px", xs: "0px" },
+  marginLeft: { md: "0px", xs: "0px" },
+  marginRight: { md: "0px", xs: "0px" },
   width: {
     sm: "100vw",
     md: "100vw",

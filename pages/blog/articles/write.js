@@ -136,6 +136,7 @@ export default (props) => {
           highlighter={theme.palette.secondary.main}
           htmlEl={htmlEl}
           target={editorRef}
+          editortrue={true}
         ></AsideNavBar>
       </Container>
     </Container>

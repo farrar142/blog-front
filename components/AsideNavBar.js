@@ -61,6 +61,7 @@ export default (props) => {
   const highlightedText = props.highlighter || "green";
   const style = props.sx ? props.sx : {};
   const editorRef = props.htmlEl;
+  const editortrue = props.editortrue;
   const [titleNav, setTitleNav] = useState({});
   const scrollPosition = useScrollPosition();
   const isResized = useResize(editorRef);
@@ -168,6 +169,7 @@ export default (props) => {
     if (titleNav) {
       try {
         try {
+          // #태그로 스크롤링하도록 하는 로직.
           if (isLocated) {
             const target_collection = props.target.current
               .getInstance()
@@ -242,6 +244,7 @@ export default (props) => {
           prop={[dummy, ...all_list][0]}
           sposition={scrollPosition}
           editorRef={editorRef}
+          editortrue={editortrue}
         ></SubComponent>
       </div>
     );
@@ -258,6 +261,7 @@ function SubComponent(props) {
   const editorRef = props.editorRef;
   const myItem = props.prop;
   const scrollPosition = props.sposition;
+  const editortrue = props.editortrue;
 
   const mousePosition = useMousePosition();
   const margin = props.margin ? props.margin : 300;
@@ -285,7 +289,7 @@ function SubComponent(props) {
     }
     function isFirst(id) {
       if (id !== 0) {
-        return editorRef ? "block" : "none";
+        return editortrue ? "block" : "none";
       } else {
         return "block";
       }
@@ -305,7 +309,7 @@ function SubComponent(props) {
         ];
       } else {
         try {
-          isDisplay("none");
+          editorRef ? isDisplay("block") : isDisplay("none");
         } catch {}
         return [editorRef ? "1rem" : "0.7rem", "black"];
       }

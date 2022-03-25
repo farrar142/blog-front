@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -11,6 +11,7 @@ import {
 import { useAccountsInfo, useSysMsg, useToken } from "../../src/hooks";
 import theme from "../../src/theme";
 import { Blog } from "../../src/api/API";
+import Router from "next/router";
 export default (props) => {
   const m_styles = styles(theme);
   const [my_info, set_info] = useAccountsInfo();
@@ -46,6 +47,13 @@ const InfoContainer = (props) => {
     }
     console.log(result);
   };
+  useEffect(() => {
+    if (!token) {
+      setMsg("접근 권한이 없습니다.");
+      Router.push("/");
+      // return <div>asd</div>;
+    }
+  }, [token]);
   return (
     <Paper sx={m_styles.infoCon}>
       <Box sx={m_styles.infoBox}>

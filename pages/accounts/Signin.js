@@ -122,7 +122,7 @@ export default function SignIn(props) {
           </Button>
           <Grid container>
             <Grid item xs>
-              <Link href="#" color="black.main">
+              <Link href="/accounts/Idfinder" color="black.main">
                 <Typography color="black">Forgot password?</Typography>
               </Link>
             </Grid>

@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     privileged: true
     container_name: react
-    command : npm run dev
+    command : service nginx restart && npm run dev
     # command : tail -f /dev/null
     hostname: root
     volumes:

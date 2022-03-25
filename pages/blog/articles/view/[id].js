@@ -98,6 +98,7 @@ export default function page() {
           sx={styles.asidebar}
           highlighter={theme.palette.secondary.main}
           target={viewerRef}
+          editortrue={false}
         ></AsideNavBar>
       </Container>
     </Container>

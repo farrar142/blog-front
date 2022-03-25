@@ -51,6 +51,17 @@ class Auth {
       })
       .catch((error) => false);
   };
+  find_email = async (useremail) => {
+    const Url = "/api/accounts/find/mail";
+    console.log(useremail);
+    return await get(encodeURI(Url + "?useremail=" + useremail))
+      .then((res) => {
+        return res.data;
+      })
+      .catch((err) => {
+        return false;
+      });
+  };
   logout = () => {};
   set(token) {
     this.access_token = token;
