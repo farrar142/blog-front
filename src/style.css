@@ -25,3 +25,16 @@ html > body .codemirror--body + * {
   font-family: "GmarketSansMedium", sans-serif;
   text-underline-position: under;
 }
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hidden:focus-visible {
+  outline: 0;
+}
+
+.scrollbar-hidden2 {
+  -ms-overflow-style: none;
+  scrollbar-width: none; /* Firefox */
+}

@@ -13,7 +13,7 @@ async function get(api, data = {}) {
 class Auth {
   access_token;
   login = async (id, pw) => {
-    const signinUrl = "/api/signin/";
+    const signinUrl = "/api/signin";
     return await post(signinUrl, {
       username: id,
       password: pw,
@@ -26,7 +26,7 @@ class Auth {
       .catch((error) => false);
   };
   signup = async (id, em, pw) => {
-    const signupUrl = "/api/signup/";
+    const signupUrl = "/api/signup";
     return await post(signupUrl, {
       username: id,
       email: em,
@@ -41,7 +41,7 @@ class Auth {
   };
 
   get_info = async (token) => {
-    const infoUrl = "/api/userinfo/";
+    const infoUrl = "/api/userinfo";
     return await post(infoUrl, {
       token: token.token,
     })

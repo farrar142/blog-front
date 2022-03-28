@@ -13,10 +13,14 @@ import {
   CliHost,
   CliPw,
   cursorLoadingAtom,
+  serviceAtom,
+  environAtom,
+  testDataAtom,
 } from "./Atom";
 import { tag_stringfy } from "./functions";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { Blog } from "./api/API";
+import { any } from "prop-types";
 
 export function useBlogChecker(blogId = null) {
   const [curBlog, setCurBlog] = useRecoilState(currentViewingBlog);
@@ -91,6 +95,49 @@ export function useSearchTag(value = null) {
   };
   return [curTag, handler];
 }
+//composerator starts
+export function useServiceAtom(value = null) {
+  const [service, setService] = useRecoilState(serviceAtom);
+  const [sysMsg, setMsg] = useSysMsg();
+  const handler = (newValue) => {
+    console.log(newValue);
+    const isSameName = service.filter((value, index) => {
+      if (value.name.toLowerCase() === newValue.name.toLowerCase()) {
+        return true;
+      }
+    });
+    if (isSameName.length === 0) {
+      setService([...service, newValue]);
+      return true;
+    } else {
+      setMsg("이미 같은 이름이 있습니다.");
+      return false;
+    }
+  };
+  const remover = (idx) => {
+    setService(service.filter((val, index) => index !== idx));
+  };
+  return [service, handler, remover];
+}
+export function useEnvironAtom(value = null) {
+  const [environ, setEnviron] = useRecoilState(environAtom(value));
+  const handler = (newValue) => {
+    setEnviron([...environ, newValue]);
+  };
+  const remover = (idx) => {
+    setEnviron(environ.filter((v, i) => i !== idx));
+  };
+  return [environ, handler, remover];
+}
+export function useTestDataAtom(value = null) {
+  const [environ, setEnviron] = useRecoilState(testDataAtom);
+  const handler = (newValue) => {
+    setEnviron(newValue);
+  };
+  return [environ, handler];
+}
+//composerator ends
+
 export function useCursorLoading(value = null) {
   const [cursorLoading, setCursorLoading] = useRecoilState(cursorLoadingAtom);
 

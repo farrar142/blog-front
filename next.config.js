@@ -1,6 +1,7 @@
 module.exports = {
+  // trailingSlash: true,
   reactStrictMode: true,
-  async redirects() { 
+  async redirects() {
     return [
       {
         source: "/api/:path*",
@@ -8,5 +9,5 @@ module.exports = {
         permanent: false,
       },
     ];
-  }
+  },
 };

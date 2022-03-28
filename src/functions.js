@@ -122,6 +122,36 @@ export function Articles_renderer(props) {
   }
 }
 
+export const isEmpty = (value) => {
+  if (
+    value == "" ||
+    value == null ||
+    value == undefined ||
+    (value != null && typeof value == "object" && !Object.keys(value).length)
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+};
+export const emptyAny = (list) => {
+  const counter = list.filter((v, i) => !isEmpty(v));
+
+  if (counter.length >= 1) {
+    return true;
+  } else {
+    return false;
+  }
+};
+export const includesAny = (target, filterlist) => {
+  const counter = filterlist.filter((v, i) => target.includes(v));
+  if (counter.length >= 1) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
 const styles = {
   mainTagCon: {
     overflow: "scroll",

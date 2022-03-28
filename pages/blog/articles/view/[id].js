@@ -109,8 +109,7 @@ const styles = {
   articleCon: {
     display: "flex",
     flexDirection: "row",
-    // justifyContent: "center",
-    // alignItems: "center",
+    justifyContent: "center",
     width: "100%",
   },
   viewer: {
@@ -121,8 +120,8 @@ const styles = {
   },
   emptyCon: {
     width: "15%",
-    marginLeft: "10px",
-    marginRight: "10px",
+    marginLeft: "0",
+    marginRight: "0",
     display: {
       xs: "none",
       md: "block",
@@ -133,11 +132,13 @@ const styles = {
       xs: "100%",
       md: "70%",
     },
+    margin: 0,
+    padding: 0,
   },
   asideCon: {
     width: "15%",
-    marginLeft: "10px",
-    marginRight: "10px",
+    marginLeft: "0",
+    marginRight: "0",
     display: {
       xs: "none",
       md: "block",
@@ -147,6 +148,8 @@ const styles = {
     position: "sticky",
     top: "20vh",
     width: "100%",
+    marginLeft: "0",
+    marginRight: "0",
     color: "secondary",
     transition: "0.3s",
   },

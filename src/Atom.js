@@ -9,6 +9,13 @@ import {
 } from "recoil";
 
 import { recoilPersist } from "recoil-persist";
+import {
+  DBEnviron,
+  dbFilter,
+  nginxProxyManagerFilter,
+  NPMEnviron,
+} from "./dockerenviron";
+import { includesAny } from "./functions";
 const { persistAtom } = recoilPersist();
 const { persistAtom: blogAtom } = recoilPersist({
   key: "blogAtom",
@@ -121,5 +128,67 @@ export const articleState = atomFamily({
 export const writeArticle = atom({
   key: "writeArticleState",
   default: blogFactory("", "", ""),
+  effects_UNSTABLE: [persistAtomEffect],
+});
+// composerator
+
+const dockerOptions = [
+  { name: "nginx", image: "nginx:latest" },
+  { name: "mariadb", image: "mariadb:latest" },
+  { name: "jenkins", image: "jenkins:latest" },
+  { name: "nodejs", image: "nodejs:16" },
+  { name: "redis", image: "redis:latest" },
+  { name: "jupyter", image: "jupyter/datascience-notebook:latest" },
+];
+
+const testData = {
+  django: {
+    image: "python:3.10",
+    container_name: "django",
+    volumes: ["./apps:./usr/src/app"],
+    ports: ["8000:8000"],
+    environment: ["APIKEY:124125621323"],
+    depends_on: {
+      db: {
+        condition: "service_healthy",
+      },
+    },
+  },
+  react: {
+    build: ".",
+    user: "root",
+    restart: "unless-stopped",
+    container_name: "react",
+    command: "npm run dev",
+    user: "root",
+    volumes: [
+      "./components:./usr/src/app/components",
+      "./components:./usr/src/app/components",
+    ],
+    ports: ["3000:80", "5555:5555"],
+  },
+};
+
+export const serviceAtom = atom({
+  key: "serviceAtom",
+  default: dockerOptions,
+  effects_UNSTABLE: [persistAtomEffect],
+});
+export const testDataAtom = atom({
+  key: "testDataAtom",
+  default: testData,
+  effects_UNSTABLE: [persistAtomEffect],
+});
+export const environAtom = atomFamily({
+  key: "atomFamily",
+  default: (id) => {
+    if (includesAny(id, dbFilter)) {
+      return DBEnviron;
+    } else if (includesAny(id, nginxProxyManagerFilter)) {
+      return NPMEnviron;
+    } else {
+      return [];
+    }
+  },
   effects_UNSTABLE: [persistAtomEffect],
 });

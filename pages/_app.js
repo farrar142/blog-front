@@ -91,17 +91,12 @@ const Contents = ({ children }) => {
   if (router.isReady) {
   } else {
     return (
-      <Container maxWidth={false} component="div" sx={styles}>
+      <Box>
         <Progressbar />
-      </Container>
+      </Box>
     );
   }
-  return (
-    <Container maxWidth={false} component="div" sx={styles}>
-      {progBar()}
-      {children}
-    </Container>
-  );
+  return <Box>{children}</Box>;
 };
 const Middleware = ({ children }) => {
   const setSsrCompleted = useSsrComplectedState();
@@ -121,10 +116,12 @@ const Middleware = ({ children }) => {
       }
     }
   }, [token]);
-  return <>{children}</>;
+  return <Box>{children}</Box>;
 };
 const styles = {
+  width: "100%",
   margin: 0,
+  padding: 0,
   paddingLeft: { md: "0px", xs: "0px" },
   paddingRight: { md: "0px", xs: "0px" },
   marginLeft: { md: "0px", xs: "0px" },
